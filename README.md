@@ -1,0 +1,122 @@
+# XiaoZhi AI Chatbot – Custom Build with Servo & Face Animation
+
+This is a customized fork of the XiaoZhi ESP32 project with **servo motors** and **JijiFace animated expressions** wired to AI emotions. These additions work **only** with the **compact_wifi_board_s3cam** board (`bread-compact-wifi-s3cam`).
+
+## Original Project & Documentation
+
+- **Original XiaoZhi ESP32 repo:** [78/xiaozhi-esp32](https://github.com/78/xiaozhi-esp32)
+
+---
+
+## What’s Different in This Fork
+
+| Feature                  | Status                                                                          |
+| ------------------------ | ------------------------------------------------------------------------------- |
+| **JijiFace animation**   | Animated robot face that reacts to emotions (happy, sad, angry, etc.)           |
+| **Servo motors**         | Two servos driven by emotions via `SERVO1_GPIO` and `SERVO2_GPIO`               |
+| **Touch button → happy** | Touch button triggers happy face and servo movement; release returns to neutral |
+
+These features are **implemented only for the Bread Compact WiFi + LCD + Camera** board. Other boards in the repo do not define the servo controller, so they will not have emotion-driven servos or the full JijiFace integration.
+
+---
+
+## Hardware (This Fork)
+
+- **Board:** ESP32S3CAM (Bread Compact WiFi + LCD + Camera)
+- **Camera:** OV2640
+- **Display:** SPI LCD (e.g. ST7789 240×320, GC9A01 240×240) – match your hardware in menuconfig
+- **Servos:** 2 servos on GPIO 1 and GPIO 2 (configurable in `main/boards/bread-compact-wifi-s3cam/config.h`)
+- **Audio:** INMP441 (I2S mic) + MAX98357 (I2S speaker), Duplex I2S
+
+---
+
+## Build Configuration
+
+Use menuconfig to match the reference settings so the firmware works correctly.
+
+### 1. Set target and open menuconfig
+
+```bash
+idf.py set-target esp32s3
+idf.py menuconfig
+```
+
+### 2. Board and display
+
+1. Go to **Xiaozhi Assistant → Board Type**
+2. Select **Bread Compact WiFi + LCD + Camera (面包板)**
+3. Go to **Xiaozhi Assistant → LCD Type**
+4. Choose the LCD that matches your display, e.g.:
+   - **GC9A01 240\*240 Circle** (round display)
+   - Or the correct option for your panel
+
+### 3. Camera
+
+1. Go to **Component config → Espressif Camera Sensors Configurations → Camera Sensor Configuration**
+2. Set **Select and Set Camera Sensor** to **OV2640**
+3. Enter the OV2640 submenu:
+   - Enable **Auto detect**
+   - Set **default output format** to **YUV422**
+   - Pick an appropriate resolution
+
+### 4. Custom assets (wake words, fonts, theme)
+
+Use the **Custom Assets Generator** to configure board type, screen size, wake words, fonts, emojis, and chat background:
+
+👉 **[xiaozhi-assets-generator](https://github.com/78/xiaozhi-assets-generator)** — clone and run it locally, or use the hosted version if available (check the repo).
+
+Configure your board type, screen size, and custom wake words there. **We recommend setting up your own wake words** for best results.
+
+#### Reference configuration (what this fork uses)
+
+| Setting          | Value     |
+| ---------------- | --------- |
+| Board            | ESP32-S3  |
+| Screen size      | 240×240   |
+| Fonts            | None      |
+| Emoji pack       | None      |
+| Background color | `#000000` |
+| Theme mode       | Dark      |
+
+#### Using the pre-built assets.bin (optional)
+
+A pre-built `assets.bin` with the above settings is included in `main/assets.bin` for quick start. **For best results, we recommend creating your own assets with custom wake words** using the generator above.
+
+To use the pre-built (or your own) `assets.bin`:
+
+1. In **menuconfig** (`idf.py menuconfig`), go to **Xiaozhi Assistant → Flash Assets**
+2. Select **Flash Custom Assets**
+3. Set **Custom Assets File** to `assets.bin` (the default; the file lives in `main/`)
+4. Save and build
+
+If you put your own `assets.bin` elsewhere, set **Custom Assets File** to the path relative to the project (e.g. `main/assets.bin`).
+
+---
+
+### 5. Save and build
+
+1. Save (S) and exit (Q)
+2. Build and flash:
+
+```bash
+idf.py build flash
+```
+
+---
+
+## Servo & Face Behavior
+
+- **Servo GPIOs:** defined in `main/boards/bread-compact-wifi-s3cam/config.h` as `SERVO1_GPIO` and `SERVO2_GPIO` (default GPIO 1 and 2).
+- Set either to `GPIO_NUM_NC` in `config.h` to disable that servo.
+- **Touch button (GPIO 14):** press → happy emotion (face + servos); release → neutral.
+
+---
+
+## Project Structure
+
+- `main/boards/bread-compact-wifi-s3cam/` – board-specific code (servo init, camera, display)
+- `main/boards/common/servo_controller.h` – shared servo logic
+- `main/display/lvgl_display/jiji_face.cc` – JijiFace implementation
+- `main/display/lcd_display.cc` – display + emotion → servo wiring
+
+# xiaozhi-jiji
