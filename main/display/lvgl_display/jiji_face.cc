@@ -36,13 +36,11 @@ JijiFace::JijiFace(lv_obj_t *parent, int width, int height)
   lv_canvas_set_buffer(canvas_, canvas_buf_, width, height,
                        LV_COLOR_FORMAT_RGB565);
 
-  // Scale eye sizes proportionally to canvas size (designed for ~240px, scale
-  // to actual size) Default sizes are for 240x240, scale down/up based on
-  // actual canvas size
-  float scale = (float)width / 240.0f;
-  // Larger face by default: bigger eyes + tighter spacing.
-  eyeLwidthDefault = (int)(56 * scale);
-  eyeLheightDefault = (int)(56 * scale);
+  // Scale for full 240x240: use 180px reference so face fills the screen
+  float scale = (float)width / 180.0f;
+  // Wide eyes, shorter height (oval shape)
+  eyeLwidthDefault = (int)(86 * scale);
+  eyeLheightDefault = (int)(48 * scale);
   eyeLwidthCurrent = eyeLwidthDefault;
   eyeLheightNext = eyeLheightDefault;
   eyeRwidthDefault = eyeLwidthDefault;
@@ -50,7 +48,7 @@ JijiFace::JijiFace(lv_obj_t *parent, int width, int height)
   eyeRwidthCurrent = eyeRwidthDefault;
   eyeRheightNext = eyeRheightDefault;
   // Wider gap between eyes
-  spaceBetweenDefault = (int)(36 * scale);
+  spaceBetweenDefault = (int)(44 * scale);
   spaceBetweenCurrent = spaceBetweenDefault;
   spaceBetweenNext =
       spaceBetweenDefault; // ensure interpolation targets the default
@@ -67,10 +65,12 @@ JijiFace::JijiFace(lv_obj_t *parent, int width, int height)
   if (travel_margin_y_ < (int)(10 * scale))
     travel_margin_y_ = (int)(10 * scale);
 
-  // Initialize default positions
+  // Initialize default positions (shift face left by 12px)
+  const int face_offset_x = -12;
   eyeLxDefault = ((screenWidth) -
                   (eyeLwidthDefault + spaceBetweenDefault + eyeRwidthDefault)) /
-                 2;
+                     2 +
+                 face_offset_x;
   eyeLyDefault = ((screenHeight - eyeLheightDefault) / 2);
   eyeLx = eyeLxDefault;
   eyeLy = eyeLyDefault;
@@ -707,8 +707,8 @@ void JijiFace::drawEyes() {
     // Center the nose between eyes (or under the single eye in cyclops mode)
     int center_x = 0;
     int center_y = 0;
-    // Move the nose lower relative to the eyes
-    const int nose_drop = eyeLheightCurrent / 4;
+    // Move the nose lower relative to the eyes (larger drop = more space)
+    const int nose_drop = eyeLheightCurrent / 3;
     if (cyclops) {
       center_x = eyeLx + (eyeLwidthCurrent / 2);
       center_y = eyeLy + (eyeLheightCurrent / 2) + nose_drop;
@@ -718,13 +718,13 @@ void JijiFace::drawEyes() {
       center_y = (eyeLy + eyeRy) / 2 + (eyeLheightCurrent / 2) + nose_drop;
     }
 
-    // Small horizontal ellipse/pill nose
-    int nose_w = eyeLwidthCurrent / 3;
-    if (nose_w < 10)
-      nose_w = 10;
-    int nose_h = nose_w / 3;
-    if (nose_h < 5)
-      nose_h = 5;
+    // Bigger pill nose (wider and taller)
+    int nose_w = eyeLwidthCurrent / 2;
+    if (nose_w < 12)
+      nose_w = 12;
+    int nose_h = nose_w / 2;
+    if (nose_h < 6)
+      nose_h = 6;
 
     // Clamp inside canvas
     if (center_x - nose_w / 2 < 1)

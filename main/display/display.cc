@@ -40,6 +40,10 @@ void Display::SetEmotion(const char* emotion) {
     ESP_LOGW(TAG, "SetEmotion: %s", emotion);
 }
 
+void Display::SetEmotionInstant(const char* emotion) {
+    SetEmotion(emotion);  // Default: same as SetEmotion
+}
+
 void Display::SetChatMessage(const char* role, const char* content) {
     ESP_LOGW(TAG, "Role:%s", role);
     ESP_LOGW(TAG, "     %s", content);

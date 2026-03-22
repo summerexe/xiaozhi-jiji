@@ -18,6 +18,7 @@
 #include <esp_lcd_panel_ops.h>
 #include <esp_lcd_panel_vendor.h>
 #include <esp_log.h>
+#include <esp_timer.h>
 
 #if defined(LCD_TYPE_ILI9341_SERIAL)
 #include "esp_lcd_ili9341.h"
@@ -62,8 +63,21 @@ static const gc9a01_lcd_init_cmd_t gc9107_lcd_init_cmds[] = {
 
 #define TAG "CompactWifiBoardS3Cam"
 
+// How long (ms) the happy face + servo pose stays after you release the touch
+// button, before returning to neutral (smooth interpolation). See README.
+#define TOUCH_SMILE_HOLD_MS 1400
+
 // Static servo controller instance (accessed via extern in display code)
 static ServoController *g_servo_controller = nullptr;
+
+static void TouchReleaseTimerCallback(void *arg) {
+  auto &app = Application::GetInstance();
+  app.Schedule([]() {
+    if (auto display = Board::GetInstance().GetDisplay(); display) {
+      display->SetEmotion("neutral");
+    }
+  });
+}
 
 class CompactWifiBoardS3Cam : public WifiBoard {
 private:
@@ -71,6 +85,7 @@ private:
   Button touch_button_;
   LcdDisplay *display_;
   Esp32Camera *camera_;
+  esp_timer_handle_t touch_release_timer_ = nullptr;
 
   void InitializeSpi() {
     spi_bus_config_t buscfg = {};
@@ -188,8 +203,12 @@ private:
       app.ToggleChatState();
     });
 
-    // TTP223 (active HIGH): touch -> show happy, release -> neutral
-    touch_button_.OnPressDown([]() {
+    // TTP223 (active HIGH): touch -> happy, release -> keep smiling for
+    // TOUCH_SMILE_HOLD_MS then smoothly return to neutral (interpolated)
+    touch_button_.OnPressDown([this]() {
+      if (touch_release_timer_ != nullptr) {
+        esp_timer_stop(touch_release_timer_);
+      }
       auto &app = Application::GetInstance();
       app.Schedule([]() {
         if (auto display = Board::GetInstance().GetDisplay(); display) {
@@ -197,13 +216,20 @@ private:
         }
       });
     });
-    touch_button_.OnPressUp([]() {
-      auto &app = Application::GetInstance();
-      app.Schedule([]() {
-        if (auto display = Board::GetInstance().GetDisplay(); display) {
-          display->SetEmotion("neutral");
+    touch_button_.OnPressUp([this]() {
+      if (touch_release_timer_ == nullptr) {
+        esp_timer_create_args_t args = {};
+        args.callback = &TouchReleaseTimerCallback;
+        args.arg = this;
+        args.dispatch_method = ESP_TIMER_TASK;
+        args.name = "touch_release";
+        if (esp_timer_create(&args, &touch_release_timer_) != ESP_OK) {
+          touch_release_timer_ = nullptr;
+          return;
         }
-      });
+      }
+      esp_timer_start_once(touch_release_timer_,
+                          TOUCH_SMILE_HOLD_MS * 1000);
     });
   }
 

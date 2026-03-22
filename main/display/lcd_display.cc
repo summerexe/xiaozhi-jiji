@@ -517,10 +517,9 @@ void LcdDisplay::SetupUI() {
   lv_obj_set_style_text_color(emoji_label_, lvgl_theme->text_color(), 0);
   lv_label_set_text(emoji_label_, FONT_AWESOME_MICROCHIP_AI);
 
-  // Initialize JijiFace - sized for round display with padding (240x240 ->
-  // 200x200)
+  // Initialize JijiFace - sized for round display with minimal padding
   int face_size = (width_ < height_ ? width_ : height_);
-  int padding = 20; // 20px padding on each side for round display
+  int padding = 0; // Full screen - face fills 240x240
   int face_width = face_size - (padding * 2);
   int face_height = face_size - (padding * 2);
   jiji_face_ = std::make_unique<JijiFace>(screen, face_width, face_height);
@@ -1004,10 +1003,9 @@ void LcdDisplay::SetupUI() {
   lv_obj_center(low_battery_label_);
   lv_obj_add_flag(low_battery_popup_, LV_OBJ_FLAG_HIDDEN);
 
-  // Initialize JijiFace - sized for round display with padding (240x240 ->
-  // 200x200)
+  // Initialize JijiFace - sized for round display with minimal padding
   int face_size = (width_ < height_ ? width_ : height_);
-  int padding = 20; // 20px padding on each side for round display
+  int padding = 0; // Full screen - face fills 240x240
   int face_width = face_size - (padding * 2);
   int face_height = face_size - (padding * 2);
   // Only create if not already created
@@ -1123,6 +1121,20 @@ void LcdDisplay::SetEmotion(const char *emotion) {
     if (is("neutral") || is("idle")) {
       jiji_face_->setMood(DEFAULT);
       jiji_face_->setIdleMode(true, 5, 2);
+      jiji_face_->setCuriosity(true);
+    } else if (is("speaking")) {
+      // Eyes look up (N) – "I'm talking to you"
+      jiji_face_->setMood(DEFAULT);
+      jiji_face_->setPosition(N);
+      jiji_face_->setAutoblinker(true, 4, 1);
+      jiji_face_->setIdleMode(false);
+      jiji_face_->setCuriosity(false);
+    } else if (is("listening")) {
+      // Attentive: eyes centered, curiosity on – "I'm listening"
+      jiji_face_->setMood(DEFAULT);
+      jiji_face_->setPosition(DEFAULT);
+      jiji_face_->setAutoblinker(true, 3, 1);
+      jiji_face_->setIdleMode(true, 4, 2);
       jiji_face_->setCuriosity(true);
     } else if (is("happy") || is("joy")) {
       jiji_face_->setMood(HAPPY);
@@ -1322,6 +1334,50 @@ void LcdDisplay::SetEmotion(const char *emotion) {
     lv_obj_add_flag(emoji_label_, LV_OBJ_FLAG_HIDDEN);
   }
 #endif
+}
+
+void LcdDisplay::SetEmotionInstant(const char *emotion) {
+  // Same as SetEmotion but servos move instantly (no interpolation).
+  // Used when touch is released to snap back to neutral.
+  if (jiji_face_ == nullptr) {
+    return;
+  }
+  DisplayLockGuard lock(this);
+
+  if (emoji_image_)
+    lv_obj_add_flag(emoji_image_, LV_OBJ_FLAG_HIDDEN);
+  if (emoji_label_)
+    lv_obj_add_flag(emoji_label_, LV_OBJ_FLAG_HIDDEN);
+  if (jiji_face_->GetCanvas()) {
+    lv_obj_remove_flag(jiji_face_->GetCanvas(), LV_OBJ_FLAG_HIDDEN);
+  }
+
+  auto is = [&](const char *name) { return strcmp(emotion, name) == 0; };
+  jiji_face_->setSweat(false);
+  jiji_face_->setCyclops(false);
+  jiji_face_->setHFlicker(false);
+  jiji_face_->setVFlicker(false);
+  jiji_face_->setPosition(DEFAULT);
+  jiji_face_->open(true, true);
+
+  if (is("neutral") || is("idle")) {
+    jiji_face_->setMood(DEFAULT);
+    jiji_face_->setIdleMode(true, 5, 2);
+    jiji_face_->setCuriosity(true);
+  } else {
+    jiji_face_->setMood(DEFAULT);
+    jiji_face_->setIdleMode(true, 5, 2);
+    jiji_face_->setCuriosity(true);
+  }
+
+  auto lvgl_theme = static_cast<LvglTheme *>(current_theme_);
+  jiji_face_->SetColors(lvgl_theme->background_color(),
+                        lvgl_theme->text_color());
+  jiji_face_->update();
+
+  if (auto *servo = GetServoController(); servo != nullptr) {
+    servo->SetEmotionInstant(emotion);
+  }
 }
 
 void LcdDisplay::SetTheme(Theme *theme) {

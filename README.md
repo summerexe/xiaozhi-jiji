@@ -10,11 +10,11 @@ This is a customized fork of the XiaoZhi ESP32 project with **servo motors** and
 
 ## What’s Different in This Fork
 
-| Feature                  | Status                                                                          |
-| ------------------------ | ------------------------------------------------------------------------------- |
-| **JijiFace animation**   | Animated robot face that reacts to emotions (happy, sad, angry, etc.)           |
-| **Servo motors**         | Two servos driven by emotions via `SERVO1_GPIO` and `SERVO2_GPIO`               |
-| **Touch button → happy** | Touch button triggers happy face and servo movement; release returns to neutral |
+| Feature                  | Status                                                                                                             |
+| ------------------------ | ------------------------------------------------------------------------------------------------------------------ |
+| **JijiFace animation**   | Animated robot face that reacts to emotions (happy, sad, angry, etc.)                                              |
+| **Servo motors**         | Two servos driven by emotions via `SERVO1_GPIO` and `SERVO2_GPIO`                                                  |
+| **Touch button → happy** | Touch → happy face + servos; after release, smile holds for `TOUCH_SMILE_HOLD_MS` then smoothly returns to neutral |
 
 These features are **implemented only for the Bread Compact WiFi + LCD + Camera** board. Other boards in the repo do not define the servo controller, so they will not have emotion-driven servos or the full JijiFace integration.
 
@@ -22,11 +22,15 @@ These features are **implemented only for the Bread Compact WiFi + LCD + Camera*
 
 ## Hardware (This Fork)
 
+Full BOM in my Patreon page: https://www.patreon.com/posts/jiji-robot-bill-147615515
+
 - **Board:** ESP32S3CAM (Bread Compact WiFi + LCD + Camera)
 - **Camera:** OV2640
-- **Display:** SPI LCD (e.g. ST7789 240×320, GC9A01 240×240) – match your hardware in menuconfig
+- **Display:** SPI LCD (GC9A01 240×240) – match your hardware in menuconfig
 - **Servos:** 2 servos on GPIO 1 and GPIO 2 (configurable in `main/boards/bread-compact-wifi-s3cam/config.h`)
 - **Audio:** INMP441 (I2S mic) + MAX98357 (I2S speaker), Duplex I2S
+- **Touch Sensor:** TTP223
+- **Power:** Powered by 5V output power bank
 
 ---
 
@@ -108,7 +112,19 @@ idf.py build flash
 
 - **Servo GPIOs:** defined in `main/boards/bread-compact-wifi-s3cam/config.h` as `SERVO1_GPIO` and `SERVO2_GPIO` (default GPIO 1 and 2).
 - Set either to `GPIO_NUM_NC` in `config.h` to disable that servo.
-- **Touch button (GPIO 14):** press → happy emotion (face + servos); release → neutral.
+- **Touch button (GPIO 14):** press → happy emotion (face + servos). On release, the smile and servo pose **stay for a short hold time**, then the face and servos **smoothly return to neutral** (interpolated servo movement).
+
+### `TOUCH_SMILE_HOLD_MS` (smile duration after touch release)
+
+In `main/boards/bread-compact-wifi-s3cam/compact_wifi_board_s3cam.cc`, the macro **`TOUCH_SMILE_HOLD_MS`** sets how many **milliseconds** the device keeps showing the happy expression and servo “smile” pose **after** you lift your finger from the touch pad, before returning to neutral (servos use smooth interpolation).
+
+| Value                    | Effect                                     |
+| ------------------------ | ------------------------------------------ |
+| **Lower** (e.g. `600`)   | Returns to neutral sooner after release.   |
+| **Higher** (e.g. `2000`) | Keeps the happy look longer after release. |
+| **Default**              | `1400` ms                                  |
+
+Change the number, rebuild, and flash. Touching again before the hold ends cancels the pending return and keeps the happy state (timer restarts on the next release).
 
 ---
 
