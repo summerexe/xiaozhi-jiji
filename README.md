@@ -38,14 +38,60 @@ Full BOM in my Patreon page: https://www.patreon.com/posts/jiji-robot-bill-14761
 
 Use menuconfig to match the reference settings so the firmware works correctly.
 
-### 1. Set target and open menuconfig
+### 1. ESP-IDF commands
+
+Use these commands during development:
+
+1. Activate the ESP-IDF environment:
 
 ```bash
-idf.py set-target esp32s3
+source activate_esp_idf.sh
+```
+
+2. Open the configuration menu:
+
+```bash
 idf.py menuconfig
 ```
 
-### 2. Board and display
+3. Build the firmware:
+
+```bash
+idf.py build
+```
+
+4. Flash the device:
+
+```bash
+idf.py flash
+```
+
+5. After code changes, rebuild and flash in one step:
+
+```bash
+idf.py build flash
+```
+
+6. Monitor serial output:
+
+```bash
+idf.py monitor
+```
+
+To list available serial ports on macOS:
+
+```bash
+ls /dev/cu.*
+```
+
+### 2. Set target and open menuconfig
+
+```bash
+source activate_esp_idf.sh
+idf.py menuconfig
+```
+
+### 3. Board and display
 
 1. Go to **Xiaozhi Assistant → Board Type**
 2. Select **Bread Compact WiFi + LCD + Camera (面包板)**
@@ -54,7 +100,7 @@ idf.py menuconfig
    - **GC9A01 240\*240 Circle** (round display)
    - Or the correct option for your panel
 
-### 3. Camera
+### 4. Camera
 
 1. Go to **Component config → Espressif Camera Sensors Configurations → Camera Sensor Configuration**
 2. Set **Select and Set Camera Sensor** to **OV2640**
@@ -63,7 +109,7 @@ idf.py menuconfig
    - Set **default output format** to **YUV422**
    - Pick an appropriate resolution
 
-### 4. Custom assets (wake words, fonts, theme)
+### 5. Custom assets (wake words, fonts, theme)
 
 Use the **Custom Assets Generator** to configure board type, screen size, wake words, fonts, emojis, and chat background:
 
@@ -97,7 +143,7 @@ If you put your own `assets.bin` elsewhere, set **Custom Assets File** to the pa
 
 ---
 
-### 5. Save and build
+### 6. Save and build
 
 1. Save (S) and exit (Q)
 2. Build and flash:
