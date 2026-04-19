@@ -87,7 +87,7 @@ jobs:
     needs: prepare
     if: ${{ needs.prepare.outputs.variants != '[]' }}
     strategy:
-      fail-fast: false # 单个变体失败不影响其它变体
+      fail-fast: false  # 单个变体失败不影响其它变体
       matrix:
         include: ${{ fromJson(needs.prepare.outputs.variants) }}
     runs-on: ubuntu-latest

@@ -14,12 +14,10 @@
 #include <vector>
 
 #include "board.h"
-#if CONFIG_BOARD_TYPE_BREAD_COMPACT_WIFI_CAM
 #include "servo_controller.h"
 
-// Defined in bread-compact-wifi-s3cam board only
+// Defined in board files (e.g. bread-compact-wifi-s3cam)
 extern ServoController *GetServoController();
-#endif
 
 #define TAG "LcdDisplay"
 
@@ -519,7 +517,6 @@ void LcdDisplay::SetupUI() {
   lv_obj_set_style_text_color(emoji_label_, lvgl_theme->text_color(), 0);
   lv_label_set_text(emoji_label_, FONT_AWESOME_MICROCHIP_AI);
 
-#if CONFIG_BOARD_TYPE_BREAD_COMPACT_WIFI_CAM
   // Initialize JijiFace - sized for round display with minimal padding
   int face_size = (width_ < height_ ? width_ : height_);
   int padding = 0; // Full screen - face fills 240x240
@@ -547,7 +544,6 @@ void LcdDisplay::SetupUI() {
         }
       },
       80, this); // ~12.5 calls/sec; update() throttles to configured FPS
-#endif
 }
 #if CONFIG_IDF_TARGET_ESP32P4
 #define MAX_MESSAGES 40
@@ -1007,7 +1003,6 @@ void LcdDisplay::SetupUI() {
   lv_obj_center(low_battery_label_);
   lv_obj_add_flag(low_battery_popup_, LV_OBJ_FLAG_HIDDEN);
 
-#if CONFIG_BOARD_TYPE_BREAD_COMPACT_WIFI_CAM
   // Initialize JijiFace - sized for round display with minimal padding
   int face_size = (width_ < height_ ? width_ : height_);
   int padding = 0; // Full screen - face fills 240x240
@@ -1042,7 +1037,6 @@ void LcdDisplay::SetupUI() {
         },
         80, this); // ~12.5 calls/sec; update() throttles to configured FPS
   }
-#endif
 }
 
 void LcdDisplay::SetPreviewImage(std::unique_ptr<LvglImage> image) {
@@ -1127,20 +1121,6 @@ void LcdDisplay::SetEmotion(const char *emotion) {
     if (is("neutral") || is("idle")) {
       jiji_face_->setMood(DEFAULT);
       jiji_face_->setIdleMode(true, 5, 2);
-      jiji_face_->setCuriosity(true);
-    } else if (is("speaking")) {
-      // Eyes look up (N) – "I'm talking to you"
-      jiji_face_->setMood(DEFAULT);
-      jiji_face_->setPosition(N);
-      jiji_face_->setAutoblinker(true, 4, 1);
-      jiji_face_->setIdleMode(false);
-      jiji_face_->setCuriosity(false);
-    } else if (is("listening")) {
-      // Attentive: eyes centered, curiosity on – "I'm listening"
-      jiji_face_->setMood(DEFAULT);
-      jiji_face_->setPosition(DEFAULT);
-      jiji_face_->setAutoblinker(true, 3, 1);
-      jiji_face_->setIdleMode(true, 4, 2);
       jiji_face_->setCuriosity(true);
     } else if (is("happy") || is("joy")) {
       jiji_face_->setMood(HAPPY);
@@ -1269,12 +1249,10 @@ void LcdDisplay::SetEmotion(const char *emotion) {
     // Update the face immediately
     jiji_face_->update();
 
-#if CONFIG_BOARD_TYPE_BREAD_COMPACT_WIFI_CAM
-    // Control servo motors based on emotion (board-specific implementation)
+    // Control servo motors based on emotion
     if (auto *servo = GetServoController(); servo != nullptr) {
       servo->SetEmotion(emotion);
     }
-#endif
 
     return; // Use JijiFace instead of GIF/image
   }
@@ -1383,11 +1361,9 @@ void LcdDisplay::SetEmotionInstant(const char *emotion) {
                         lvgl_theme->text_color());
   jiji_face_->update();
 
-#if CONFIG_BOARD_TYPE_BREAD_COMPACT_WIFI_CAM
   if (auto *servo = GetServoController(); servo != nullptr) {
     servo->SetEmotionInstant(emotion);
   }
-#endif
 }
 
 void LcdDisplay::SetTheme(Theme *theme) {
