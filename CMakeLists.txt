@@ -6,8 +6,10 @@ cmake_minimum_required(VERSION 3.16)
 
 set(PROJECT_VER "2.1.0")
 
-# Add this line to disable the specific warning
-add_compile_options(-Wno-missing-field-initializers)
+# Suppress known third-party / IDF noise:
+# - missing-field-initializers: struct init style in generated code
+# - macro-redefined: espressif/esp_video linux/ioctl.h vs lwIP sockets.h (_IO/_IOR/_IOW)
+add_compile_options(-Wno-missing-field-initializers -Wno-macro-redefined)
 
 include($ENV{IDF_PATH}/tools/cmake/project.cmake)
 project(xiaozhi)
