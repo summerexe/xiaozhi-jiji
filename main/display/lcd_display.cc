@@ -14,10 +14,12 @@
 #include <vector>
 
 #include "board.h"
+#if CONFIG_BOARD_TYPE_BREAD_COMPACT_WIFI_CAM
 #include "servo_controller.h"
 
-// Defined in board files (e.g. bread-compact-wifi-s3cam)
+// Defined in bread-compact-wifi-s3cam board only
 extern ServoController *GetServoController();
+#endif
 
 #define TAG "LcdDisplay"
 
@@ -517,6 +519,7 @@ void LcdDisplay::SetupUI() {
   lv_obj_set_style_text_color(emoji_label_, lvgl_theme->text_color(), 0);
   lv_label_set_text(emoji_label_, FONT_AWESOME_MICROCHIP_AI);
 
+#if CONFIG_BOARD_TYPE_BREAD_COMPACT_WIFI_CAM
   // Initialize JijiFace - sized for round display with minimal padding
   int face_size = (width_ < height_ ? width_ : height_);
   int padding = 0; // Full screen - face fills 240x240
@@ -544,6 +547,7 @@ void LcdDisplay::SetupUI() {
         }
       },
       80, this); // ~12.5 calls/sec; update() throttles to configured FPS
+#endif
 }
 #if CONFIG_IDF_TARGET_ESP32P4
 #define MAX_MESSAGES 40
@@ -1003,6 +1007,7 @@ void LcdDisplay::SetupUI() {
   lv_obj_center(low_battery_label_);
   lv_obj_add_flag(low_battery_popup_, LV_OBJ_FLAG_HIDDEN);
 
+#if CONFIG_BOARD_TYPE_BREAD_COMPACT_WIFI_CAM
   // Initialize JijiFace - sized for round display with minimal padding
   int face_size = (width_ < height_ ? width_ : height_);
   int padding = 0; // Full screen - face fills 240x240
@@ -1037,6 +1042,7 @@ void LcdDisplay::SetupUI() {
         },
         80, this); // ~12.5 calls/sec; update() throttles to configured FPS
   }
+#endif
 }
 
 void LcdDisplay::SetPreviewImage(std::unique_ptr<LvglImage> image) {
@@ -1263,10 +1269,12 @@ void LcdDisplay::SetEmotion(const char *emotion) {
     // Update the face immediately
     jiji_face_->update();
 
-    // Control servo motors based on emotion
+#if CONFIG_BOARD_TYPE_BREAD_COMPACT_WIFI_CAM
+    // Control servo motors based on emotion (board-specific implementation)
     if (auto *servo = GetServoController(); servo != nullptr) {
       servo->SetEmotion(emotion);
     }
+#endif
 
     return; // Use JijiFace instead of GIF/image
   }
@@ -1375,9 +1383,11 @@ void LcdDisplay::SetEmotionInstant(const char *emotion) {
                         lvgl_theme->text_color());
   jiji_face_->update();
 
+#if CONFIG_BOARD_TYPE_BREAD_COMPACT_WIFI_CAM
   if (auto *servo = GetServoController(); servo != nullptr) {
     servo->SetEmotionInstant(emotion);
   }
+#endif
 }
 
 void LcdDisplay::SetTheme(Theme *theme) {

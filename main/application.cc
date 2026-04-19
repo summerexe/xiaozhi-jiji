@@ -817,7 +817,11 @@ void Application::HandleStateChangedEvent() {
             break;
         case kDeviceStateListening:
             display->SetStatus(Lang::Strings::LISTENING);
+#if CONFIG_BOARD_TYPE_BREAD_COMPACT_WIFI_CAM
             display->SetEmotion("listening");
+#else
+            display->SetEmotion("neutral");
+#endif
 
             // Make sure the audio processor is running
             if (!audio_service_.IsAudioProcessorRunning()) {
@@ -835,7 +839,9 @@ void Application::HandleStateChangedEvent() {
             break;
         case kDeviceStateSpeaking:
             display->SetStatus(Lang::Strings::SPEAKING);
+#if CONFIG_BOARD_TYPE_BREAD_COMPACT_WIFI_CAM
             display->SetEmotion("speaking");
+#endif
 
             if (listening_mode_ != kListeningModeRealtime) {
                 audio_service_.EnableVoiceProcessing(false);
