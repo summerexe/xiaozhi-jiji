@@ -1,4 +1,3 @@
-import subprocess
 import sys
 import os
 import json
@@ -231,13 +230,6 @@ def release(board_type: str, config_filename: str = "config.json", *, filter_nam
             f.write("# Append by release.py\n")
             for append in sdkconfig_append:
                 f.write(f"{append}\n")
-
-        # esp_video linux/ioctl.h vs lwIP — apply guarded header (see cmake/patches/)
-        subprocess.run(
-            [sys.executable, str(Path("scripts/patch_esp_video_ioctl.py"))],
-            cwd=os.getcwd(),
-            check=False,
-        )
 
         # Build with macro BOARD_NAME defined to name
         if os.system(f"idf.py -DBOARD_NAME={name} -DBOARD_TYPE={board_type} build") != 0:
