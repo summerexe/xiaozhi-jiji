@@ -3,7 +3,6 @@
 
 #include "gif/lvgl_gif.h"
 #include "lvgl_display.h"
-#include "lvgl_display/jiji_face.h"
 
 #include <esp_lcd_panel_io.h>
 #include <esp_lcd_panel_ops.h>
@@ -13,6 +12,8 @@
 #include <memory>
 
 #define PREVIEW_IMAGE_DURATION_MS 5000
+
+class JijiFace;
 
 class LcdDisplay : public LvglDisplay {
 protected:

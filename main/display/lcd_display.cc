@@ -15,6 +15,9 @@
 
 #include "board.h"
 #include "servo_controller.h"
+#if CONFIG_BOARD_TYPE_BREAD_COMPACT_WIFI_CAM
+#include "lvgl_display/jiji_face.h"
+#endif
 
 #define TAG "LcdDisplay"
 
@@ -514,24 +517,22 @@ void LcdDisplay::SetupUI() {
   lv_obj_set_style_text_color(emoji_label_, lvgl_theme->text_color(), 0);
   lv_label_set_text(emoji_label_, FONT_AWESOME_MICROCHIP_AI);
 
-  // Initialize JijiFace - sized for round display with minimal padding
+#if CONFIG_BOARD_TYPE_BREAD_COMPACT_WIFI_CAM
+  // Only the bread-compact-wifi-s3cam board uses the custom JijiFace path.
   int face_size = (width_ < height_ ? width_ : height_);
-  int padding = 0; // Full screen - face fills 240x240
+  int padding = 0;
   int face_width = face_size - (padding * 2);
   int face_height = face_size - (padding * 2);
   jiji_face_ = std::make_unique<JijiFace>(screen, face_width, face_height);
-  // Lower FPS to reduce redraw load (easier on PSRAM/CPU)
   jiji_face_->begin(face_width, face_height, 12);
   jiji_face_->SetColors(lvgl_theme->background_color(),
                         lvgl_theme->text_color());
-  jiji_face_->setAutoblinker(true, 3, 1); // Auto blink every 3s ±1s
-  jiji_face_->setIdleMode(true, 5, 2);    // Idle movement every 5s ±2s
-  // Hide initially, will be shown when emotion is set
+  jiji_face_->setAutoblinker(true, 3, 1);
+  jiji_face_->setIdleMode(true, 5, 2);
   if (jiji_face_->GetCanvas()) {
     lv_obj_add_flag(jiji_face_->GetCanvas(), LV_OBJ_FLAG_HIDDEN);
   }
 
-  // Create timer to update JijiFace periodically.
   jiji_face_timer_ = lv_timer_create(
       [](lv_timer_t *timer) {
         LcdDisplay *display =
@@ -540,7 +541,8 @@ void LcdDisplay::SetupUI() {
           display->jiji_face_->update();
         }
       },
-      80, this); // ~12.5 calls/sec; update() throttles to configured FPS
+      80, this);
+#endif
 }
 #if CONFIG_IDF_TARGET_ESP32P4
 #define MAX_MESSAGES 40
@@ -1000,29 +1002,24 @@ void LcdDisplay::SetupUI() {
   lv_obj_center(low_battery_label_);
   lv_obj_add_flag(low_battery_popup_, LV_OBJ_FLAG_HIDDEN);
 
-  // Initialize JijiFace - sized for round display with minimal padding
+#if CONFIG_BOARD_TYPE_BREAD_COMPACT_WIFI_CAM
   int face_size = (width_ < height_ ? width_ : height_);
-  int padding = 0; // Full screen - face fills 240x240
+  int padding = 0;
   int face_width = face_size - (padding * 2);
   int face_height = face_size - (padding * 2);
-  // Only create if not already created
   if (jiji_face_ == nullptr) {
     jiji_face_ = std::make_unique<JijiFace>(screen, face_width, face_height);
-    // Lower FPS to reduce redraw load (easier on PSRAM/CPU)
     jiji_face_->begin(face_width, face_height, 12);
     jiji_face_->SetColors(lvgl_theme->background_color(),
                           lvgl_theme->text_color());
-    jiji_face_->setAutoblinker(true, 3, 1); // Auto blink every 3s ±1s
-    jiji_face_->setIdleMode(true, 5, 2);    // Idle movement every 5s ±2s
-    // Open eyes initially
+    jiji_face_->setAutoblinker(true, 3, 1);
+    jiji_face_->setIdleMode(true, 5, 2);
     jiji_face_->open();
-    // Hide initially, will be shown when emotion is set
     if (jiji_face_->GetCanvas()) {
       lv_obj_add_flag(jiji_face_->GetCanvas(), LV_OBJ_FLAG_HIDDEN);
     }
   }
 
-  // Create timer to update JijiFace periodically.
   if (jiji_face_timer_ == nullptr) {
     jiji_face_timer_ = lv_timer_create(
         [](lv_timer_t *timer) {
@@ -1032,8 +1029,9 @@ void LcdDisplay::SetupUI() {
             display->jiji_face_->update();
           }
         },
-        80, this); // ~12.5 calls/sec; update() throttles to configured FPS
+        80, this);
   }
+#endif
 }
 
 void LcdDisplay::SetPreviewImage(std::unique_ptr<LvglImage> image) {
@@ -1090,7 +1088,9 @@ void LcdDisplay::SetEmotion(const char *emotion) {
     gif_controller_.reset();
   }
 
-  // Use JijiFace for animated emotions (faster than GIF)
+#if CONFIG_BOARD_TYPE_BREAD_COMPACT_WIFI_CAM
+  // Keep the custom JijiFace and servo behavior scoped to the
+  // bread-compact-wifi-s3cam board.
   if (jiji_face_ != nullptr) {
     DisplayLockGuard lock(this);
 
@@ -1253,6 +1253,7 @@ void LcdDisplay::SetEmotion(const char *emotion) {
 
     return; // Use JijiFace instead of GIF/image
   }
+#endif
 
   // Fallback to original GIF/image display if JijiFace not available
   if (emoji_image_ == nullptr) {
@@ -1320,6 +1321,7 @@ void LcdDisplay::SetEmotion(const char *emotion) {
 }
 
 void LcdDisplay::SetEmotionInstant(const char *emotion) {
+#if CONFIG_BOARD_TYPE_BREAD_COMPACT_WIFI_CAM
   // Same as SetEmotion but servos move instantly (no interpolation).
   // Used when touch is released to snap back to neutral.
   if (jiji_face_ == nullptr) {
@@ -1361,6 +1363,9 @@ void LcdDisplay::SetEmotionInstant(const char *emotion) {
   if (auto *servo = GetServoController(); servo != nullptr) {
     servo->SetEmotionInstant(emotion);
   }
+#else
+  SetEmotion(emotion);
+#endif
 }
 
 void LcdDisplay::SetTheme(Theme *theme) {

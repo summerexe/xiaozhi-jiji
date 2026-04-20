@@ -12,6 +12,7 @@ main/assets/lang_config.h
 main/mmap_generate_emoji.h
 .DS_Store
 .cache
+.component-cache/
 *.pyc
 *.bin
 # Exception: pre-built assets for bread-compact-wifi-s3cam (wake words, fonts, theme)
