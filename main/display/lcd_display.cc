@@ -16,9 +16,6 @@
 #include "board.h"
 #include "servo_controller.h"
 
-// Defined in board files (e.g. bread-compact-wifi-s3cam)
-extern ServoController *GetServoController();
-
 #define TAG "LcdDisplay"
 
 LV_FONT_DECLARE(BUILTIN_TEXT_FONT);

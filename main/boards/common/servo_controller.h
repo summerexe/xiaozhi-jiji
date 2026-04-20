@@ -300,4 +300,8 @@ public:
   int GetServo2Position() const { return servo2_position_; }
 };
 
+// Boards with servo hardware can override this accessor. Other boards fall back
+// to the weak default implementation and simply skip servo updates.
+ServoController *GetServoController();
+
 #endif // __SERVO_CONTROLLER_H__
