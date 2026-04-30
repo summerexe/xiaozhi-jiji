@@ -7,6 +7,7 @@
 #include "application.h"
 #include "button.h"
 #include "config.h"
+#include "touch_i2c_config.h"
 #include "esp32_camera.h"
 #include "esp_video_init.h"
 #include "esp_cam_sensor_xclk.h"
@@ -178,9 +179,8 @@ private:
             },
         };
         esp_lcd_panel_io_handle_t tp_io_handle = NULL;
-        esp_lcd_panel_io_i2c_config_t tp_io_config = ESP_LCD_TOUCH_IO_I2C_GT911_CONFIG();
-        tp_io_config.dev_addr = ESP_LCD_TOUCH_IO_I2C_GT911_ADDRESS_BACKUP; // 更改 GT911 地址 
-        tp_io_config.scl_speed_hz = 100000;
+        esp_lcd_panel_io_i2c_config_t tp_io_config =
+            MakeTouchI2cConfig(ESP_LCD_TOUCH_IO_I2C_GT911_ADDRESS_BACKUP, 16);
         esp_lcd_new_panel_io_i2c(i2c_bus_, &tp_io_config, &tp_io_handle);
         esp_lcd_touch_new_i2c_gt911(tp_io_handle, &tp_cfg, &touch_);
     }
@@ -562,4 +562,3 @@ public:
 
 
 DECLARE_BOARD(M5StackTab5Board);
-

@@ -736,8 +736,20 @@ if(CONFIG_IDF_TARGET_ESP32)
                              )
 endif()
 
+set(OTTO_EMOJI_GIF_FILES "")
+if(CONFIG_BOARD_TYPE_OTTO_ROBOT OR CONFIG_BOARD_TYPE_ELECTRON_BOT)
+    find_component_by_pattern("txp666__otto-emoji-gif-component" OTTO_EMOJI_GIF_COMPONENT OTTO_EMOJI_GIF_COMPONENT_PATH)
+    if(NOT OTTO_EMOJI_GIF_COMPONENT_PATH)
+        message(FATAL_ERROR "txp666/otto-emoji-gif-component is required for ${BOARD_TYPE}")
+    endif()
+
+    foreach(GIF_NAME staticstate happy sad anger scare buxue)
+        list(APPEND OTTO_EMOJI_GIF_FILES "${OTTO_EMOJI_GIF_COMPONENT_PATH}/gifs/${GIF_NAME}.gif")
+    endforeach()
+endif()
+
 idf_component_register(SRCS ${SOURCES}
-                    EMBED_FILES ${LANG_SOUNDS} ${COMMON_SOUNDS}
+                    EMBED_FILES ${LANG_SOUNDS} ${COMMON_SOUNDS} ${OTTO_EMOJI_GIF_FILES}
                     INCLUDE_DIRS ${INCLUDE_DIRS}
                     WHOLE_ARCHIVE
                     )
