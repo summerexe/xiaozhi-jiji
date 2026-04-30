@@ -14,9 +14,9 @@
 #include <vector>
 
 #include "board.h"
-#include "servo_controller.h"
 #if CONFIG_BOARD_TYPE_BREAD_COMPACT_WIFI_CAM
 #include "lvgl_display/jiji_face.h"
+#include "servo_controller.h"
 #endif
 
 #define TAG "LcdDisplay"
@@ -309,9 +309,11 @@ LcdDisplay::~LcdDisplay() {
     gif_controller_.reset();
   }
 
+#if CONFIG_BOARD_TYPE_BREAD_COMPACT_WIFI_CAM
   if (jiji_face_timer_ != nullptr) {
     lv_timer_del(jiji_face_timer_);
   }
+#endif
 
   if (preview_timer_ != nullptr) {
     esp_timer_stop(preview_timer_);

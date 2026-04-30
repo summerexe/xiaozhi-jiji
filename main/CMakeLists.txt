@@ -23,7 +23,6 @@ set(SOURCES "audio/audio_codec.cc"
             "display/lvgl_display/lvgl_image.cc"
             "display/lvgl_display/gif/lvgl_gif.cc"
             "display/lvgl_display/gif/gifdec.c"
-            "display/lvgl_display/jiji_face.cc"
             "display/lvgl_display/jpg/image_to_jpeg.cpp"
             "display/lvgl_display/jpg/jpeg_to_image.c"
             "protocols/protocol.cc"
@@ -43,8 +42,15 @@ set(INCLUDE_DIRS "." "display" "display/lvgl_display" "display/lvgl_display/jpg"
 
 # Add board common files
 file(GLOB BOARD_COMMON_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/boards/common/*.cc)
+if(NOT CONFIG_BOARD_TYPE_BREAD_COMPACT_WIFI_CAM)
+    list(REMOVE_ITEM BOARD_COMMON_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/boards/common/servo_controller.cc")
+endif()
 list(APPEND SOURCES ${BOARD_COMMON_SOURCES})
 list(APPEND INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/boards/common)
+
+if(CONFIG_BOARD_TYPE_BREAD_COMPACT_WIFI_CAM)
+    list(APPEND SOURCES "display/lvgl_display/jiji_face.cc")
+endif()
 
 idf_build_get_property(build_components BUILD_COMPONENTS)
 # Function to find component dynamically by pattern

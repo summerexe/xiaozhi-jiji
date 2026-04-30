@@ -13,7 +13,9 @@
 
 #define PREVIEW_IMAGE_DURATION_MS 5000
 
-class JijiFace;
+#if CONFIG_BOARD_TYPE_BREAD_COMPACT_WIFI_CAM
+#include "lvgl_display/jiji_face.h"
+#endif
 
 class LcdDisplay : public LvglDisplay {
 protected:
@@ -31,11 +33,15 @@ protected:
   lv_obj_t *emoji_label_ = nullptr;
   lv_obj_t *emoji_image_ = nullptr;
   std::unique_ptr<LvglGif> gif_controller_ = nullptr;
+#if CONFIG_BOARD_TYPE_BREAD_COMPACT_WIFI_CAM
   std::unique_ptr<JijiFace> jiji_face_ = nullptr;
+#endif
   lv_obj_t *emoji_box_ = nullptr;
   lv_obj_t *chat_message_label_ = nullptr;
   esp_timer_handle_t preview_timer_ = nullptr;
+#if CONFIG_BOARD_TYPE_BREAD_COMPACT_WIFI_CAM
   lv_timer_t *jiji_face_timer_ = nullptr;
+#endif
   std::unique_ptr<LvglImage> preview_image_cached_ = nullptr;
   bool hide_subtitle_ =
       false; // Control whether to hide chat messages/subtitles
