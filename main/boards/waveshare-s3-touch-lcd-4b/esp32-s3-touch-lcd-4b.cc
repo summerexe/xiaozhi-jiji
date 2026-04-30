@@ -8,6 +8,7 @@
 #include "led/single_led.h"
 #include "mcp_server.h"
 #include "config.h"
+#include "touch_i2c_config.h"
 #include "power_save_timer.h"
 #include "axp2101.h"
 #include "i2c_device.h"
@@ -276,8 +277,8 @@ private:
             },
         };
         esp_lcd_panel_io_handle_t tp_io_handle = NULL;
-        esp_lcd_panel_io_i2c_config_t tp_io_config = ESP_LCD_TOUCH_IO_I2C_GT911_CONFIG();
-        tp_io_config.scl_speed_hz = 400*  1000;
+        esp_lcd_panel_io_i2c_config_t tp_io_config =
+            MakeTouchI2cConfig(ESP_LCD_TOUCH_IO_I2C_GT911_ADDRESS, 16, 400 * 1000);
         ESP_ERROR_CHECK(esp_lcd_new_panel_io_i2c(i2c_bus_, &tp_io_config, &tp_io_handle));
         ESP_LOGI(TAG, "Initialize touch controller");
         ESP_ERROR_CHECK(esp_lcd_touch_new_i2c_gt911(tp_io_handle, &tp_cfg, &tp));
